@@ -5,14 +5,11 @@ const express     = require('express');
 const bodyParser  = require('body-parser');
 const fccTesting  = require('./freeCodeCamp/fcctesting.js');
 const pug = require('pug')
-const session = require('express-session')
-const passport = require('passport')
-const LocalStrategy = require('passport-local')
 const mongo = require('mongodb').MongoClient
-const ObjectID = require('mongodb')
 const bcrypt = require('bcrypt');
 
-const routes = require('./routes.js')
+const auth = require('./auth')
+const routes = require('./routes')
 
 const dbURI = process.env.DBCONNECT
 const app = express();
@@ -22,13 +19,9 @@ app.use('/public', express.static(process.cwd() + '/public'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'pug')
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: true,
-  saveUninitialized: true, 
-}))
-app.use(passport.initialize())
-app.use(passport.session())
+
+
+// app.use(passport.session())
 
 
 // Enable to pass the challenge called "Advanced Node and Express - 
@@ -59,43 +52,8 @@ mongo.connect(dbURI, { useNewUrlParser: true }, (err, conn) => {
   } else {
     console.log('Successful database connection')
   }
-  
-  passport.serializeUser((user, done) => {
-     done(null, user._id);
-   });
 
-  passport.deserializeUser((id, done) => {
-    db.collection('users').findOne(
-        {_id: new ObjectID(id)},
-        (err, doc) => {
-            done(null, doc);
-        }
-      )
-    })
-  
-  passport.use(new LocalStrategy(
-    function(username, password, done) {
-     db.collection('users').findOne({ username: username }, function(err, user) {
-       console.log(`The database is: ${process.env.DBCONNECT}`)
-       console.log(`The 'user' is: {${user.username}, ${user.password}}`)
-       console.log(`User ${username} attempted to log in.`)
-       if (err) { return done(err) }
-       if (!user) {
-         console.log(`User does not exist`) 
-         return done(null, false) 
-        }
-       if (!bcrypt.compareSync(password, user.password)) {
-         console.log(`Invalid password`) 
-         return done(null, false); 
-        }
-      //  if (password !== user.password) {
-      //    // console.log(`We've got a match with ${user.username} and ${username} we're golden`)
-      //    return done(null, false) 
-      //  }
-       return done(null, user)
-     }) 
-    })
-  )
+  auth(app, db)
 
   routes(app, db)
   
