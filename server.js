@@ -10,8 +10,9 @@ const passport = require('passport')
 const LocalStrategy = require('passport-local')
 const mongo = require('mongodb').MongoClient
 const ObjectID = require('mongodb')
-const dbURI = process.env.DBCONNECT
+const bcrypt = require('bcrypt');
 
+const dbURI = process.env.DBCONNECT
 const app = express();
 
 const ensureAuthenticated = (req, res, next) => {
@@ -84,12 +85,19 @@ mongo.connect(dbURI, { useNewUrlParser: true }, (err, conn) => {
        console.log(`The database is: ${process.env.DBCONNECT}`)
        console.log(`The 'user' is: {${user.username}, ${user.password}}`)
        console.log(`User ${username} attempted to log in.`)
-       // if (err) { return done(err) }
-       // if (!user) { return done(null, false) }
-       if (password !== user.password) {
-         // console.log(`We've got a match with ${user.username} and ${username} we're golden`)
+       if (err) { return done(err) }
+       if (!user) {
+         console.log(`User does not exist`) 
          return done(null, false) 
-       }
+        }
+       if (!bcrypt.compareSync(password, user.password)) {
+         console.log(`Invalid password`) 
+         return done(null, false); 
+        }
+      //  if (password !== user.password) {
+      //    // console.log(`We've got a match with ${user.username} and ${username} we're golden`)
+      //    return done(null, false) 
+      //  }
        return done(null, user)
      }) 
     })
@@ -134,9 +142,10 @@ mongo.connect(dbURI, { useNewUrlParser: true }, (err, conn) => {
               console.log('User already exists')
               res.redirect('/');
           } else {
+              var hash = bcrypt.hashSync(req.body.password, 12)
               db.collection('users').insertOne(
                 {username: req.body.username,
-                 password: req.body.password},
+                 password: hash},
                 (err, doc) => {
                     if(err) {
                         res.redirect('/');
