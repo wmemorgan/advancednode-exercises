@@ -9,17 +9,7 @@ const bcrypt = require('bcrypt');
 //   }
 // }
 
-module.exports = function (app, db) {
-  // middleware to ensure user is authenticated before displaying profile page
-  function ensureAuthenticated(req, res, next) {
-    // isAuthenticated() via passport
-    if (req.isAuthenticated()) {
-      return next();
-    }
-
-    res.redirect('/');
-  };  
-
+module.exports = function (app, db) { 
   app.route('/')
     .get((req, res) => {
       res.render(process.cwd() + '/views/pug/index',
@@ -39,16 +29,23 @@ module.exports = function (app, db) {
         res.redirect('/profile')
       })
 
-  app.route('/logout')
-    .get((req, res) => {
-      req.logout();
-      res.redirect('/');
-    });
+  // middleware to ensure user is authenticated before displaying profile page
+  function ensureAuthenticated(req, res, next) {
+    // isAuthenticated() via passport
+    console.log('req contents are: ', req.isAuthenticated())
+    if (req.isAuthenticated()) {
+      console.log('Is authenticated')
+      return next();
+    }
+    console.log('Is not authenticated')
+    res.redirect('/');
+  }; 
 
   app.route('/profile')
-    .get(ensureAuthenticated, (req, res) => {
+    .get((req, res) => {
+      console.log('username is: ', req.user)
       res.render(process.cwd() + '/views/pug/profile',
-        { username: req.user.username })
+        { username: req.body.username, })
     })
 
   app.route('/register')
@@ -81,6 +78,12 @@ module.exports = function (app, db) {
       passport.authenticate('local', { failureRedirect: '/' }),
       (req, res, next) => {
         res.redirect('/profile');
-      })   
+      })
+      
+  app.route('/logout')
+    .get((req, res) => {
+      req.logout();
+      res.redirect('/');
+    });
 
 }

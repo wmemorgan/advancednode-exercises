@@ -1,22 +1,13 @@
 const passport = require('passport')
 const ObjectID = require('mongodb')
 const bcrypt = require('bcrypt');
-const session = require('express-session')
 const LocalStrategy = require('passport-local')
 
-module.exports = function (app, db) {
-  // app.use(session({
-  //   secret: process.env.SESSION_SECRET,
-  //   resave: true,
-  //   saveUninitialized: true,
-  // }))
-
-  app.use(passport.initialize())
-
+module.exports = function (app, db) {  
   passport.serializeUser((user, done) => {
     console.log('serialize user: ', user)
     done(null, user._id);
-  });
+  })
 
   passport.deserializeUser((id, done) => {
     console.log('deserialize id: ', id)
@@ -32,7 +23,6 @@ module.exports = function (app, db) {
     function (username, password, done) {
       db.collection('users').findOne({ username: username }, function (err, user) {
         console.log(`The database is: ${process.env.DBCONNECT}`)
-        console.log(`The 'user' is: {${user.username}, ${user.password}}`)
         console.log(`User ${username} attempted to log in.`)
         if (err) { return done(err) }
         if (!user) {
@@ -47,6 +37,7 @@ module.exports = function (app, db) {
         //    // console.log(`We've got a match with ${user.username} and ${username} we're golden`)
         //    return done(null, false) 
         //  }
+        console.log('Returning user: ', user)
         return done(null, user)
       })
     })

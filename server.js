@@ -6,10 +6,11 @@ const bodyParser  = require('body-parser');
 const fccTesting  = require('./freeCodeCamp/fcctesting.js');
 const pug = require('pug')
 const mongo = require('mongodb').MongoClient
-const bcrypt = require('bcrypt');
+const passport = require('passport')
+const session = require('express-session')
 
-const auth = require('./auth')
-const routes = require('./routes')
+const auth = require('./auth.js')
+const routes = require('./routes.js')
 
 const dbURI = process.env.DBCONNECT
 const app = express();
@@ -20,30 +21,13 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'pug')
 
-
-// app.use(passport.session())
-
-
-// Enable to pass the challenge called "Advanced Node and Express - 
-// Registration of New Users"
-// if (process.env.ENABLE_DELAYS) app.use((req, res, next) => {
-//   switch (req.method) {
-//     case 'GET':
-//       switch (req.url) {
-//         case '/logout': return setTimeout(() => next(), 500);
-//         case '/profile': return setTimeout(() => next(), 700);
-//         default: next();
-//       }
-//     break;
-//     case 'POST':
-//       switch (req.url) {
-//         case '/login': return setTimeout(() => next(), 900);
-//         default: next();
-//       }
-//     break;
-//     default: next();
-//   }
-// });
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: true,
+  saveUninitialized: true,
+}))
+app.use(passport.initialize())
+app.use(passport.session())
 
 mongo.connect(dbURI, { useNewUrlParser: true }, (err, conn) => {
   const db = conn.db("wme-practicedb")
