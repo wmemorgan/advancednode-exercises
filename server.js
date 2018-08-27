@@ -12,16 +12,10 @@ const mongo = require('mongodb').MongoClient
 const ObjectID = require('mongodb')
 const bcrypt = require('bcrypt');
 
+const routes = require('./routes.js')
+
 const dbURI = process.env.DBCONNECT
 const app = express();
-
-const ensureAuthenticated = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return next()    
-  } else {
-    res.redirect('/')
-  }
-}
 
 fccTesting(app); //For FCC testing purposes
 app.use('/public', express.static(process.cwd() + '/public'));
@@ -102,70 +96,13 @@ mongo.connect(dbURI, { useNewUrlParser: true }, (err, conn) => {
      }) 
     })
   )
-  
-  app.route('/')
-  .get((req, res) => {
-    res.render(process.cwd() + '/views/pug/index', 
-     {title: 'Home page',
-      message: 'Please login',
-      showLogin: true,
-      showRegistration: true,
-     }
-    )
-  });
 
-  app.route('/login')
-    .post(passport.authenticate('local', {failureRedirect: '/'}), 
-      (req, res) => {
-      console.log('The login req.body contents are: ', req.body)
-      res.redirect('/profile')
-    })
-
-  app.route('/logout')
-    .get((req, res) => {
-        req.logout();
-        res.redirect('/');
-    });
-
-  app.route('/profile')
-    .get(ensureAuthenticated, (req, res) => {
-      res.render(process.cwd() + '/views/pug/profile',
-                 {username: req.user.username})
-    })
-  
-  app.route('/register')
-  .post((req, res, next) => {
-      db.collection('users').findOne({ username: req.body.username }, function (err, user) {
-          if(err) {
-              next(err);
-          } else if (user) {
-              console.log('User already exists')
-              res.redirect('/');
-          } else {
-              var hash = bcrypt.hashSync(req.body.password, 12)
-              db.collection('users').insertOne(
-                {username: req.body.username,
-                 password: hash},
-                (err, doc) => {
-                    if(err) {
-                        res.redirect('/');
-                    } else {
-                        next(null, user);
-                    }
-                }
-              )
-              console.log(`${req.body.username} created`)
-          }
-      })},
-    passport.authenticate('local', { failureRedirect: '/' }),
-    (req, res, next) => {
-      res.redirect('/profile');
-  })
+  routes(app, db)
   
   app.use((req, res, next) => {
-  res.status(404)
-    .type('text')
-    .send('Not Found');
+    res.status(404)
+      .type('text')
+      .send('Not Found');
   })
   
   app.listen(process.env.PORT || 3000, () => {
