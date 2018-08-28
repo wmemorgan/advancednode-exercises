@@ -5,18 +5,29 @@ const GitHubStrategy = require('passport-github').Strategy
 const bcrypt = require('bcrypt')
 
 module.exports = function (app, db) {  
-  //serialization
-  //set up function for serialization (user -> key)
+  // //serialization for LocalStrategy
+  // //set up function for serialization (user -> key)
+  // passport.serializeUser((user, done) => {
+  //   console.log('serialize user: ', user)
+  //   done(null, user._id);
+  // })
+  // //set up function for deserialization (key -> user)
+  // passport.deserializeUser((id, done) => {
+  //   console.log('deserialize id: ', id)
+  //   db.collection('users').findOne({ _id: new ObjectID(id) }, (err, doc) => {
+  //     done(null, doc);
+  //   })
+  // })
+
+  //serialization for GitHubStrategy
   passport.serializeUser((user, done) => {
     console.log('serialize user: ', user)
-    done(null, user._id);
+    done(null, user)
   })
-  //set up function for deserialization (key -> user)
-  passport.deserializeUser((id, done) => {
-    console.log('deserialize id: ', id)
-    db.collection('users').findOne({ _id: new ObjectID(id) }, (err, doc) => {
-      done(null, doc);
-    })
+
+  passport.deserializeUser((user, done) => {
+    console.log('deserialize user: ', user)
+    done(null, user)
   })
 
   // local password authentication
@@ -47,13 +58,16 @@ module.exports = function (app, db) {
   // GitHub authentication
   passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: "https://wme-advancednode.glitch.me/auth/github/callback"
-  },
-    function (accessToken, refreshToken, profile, cb) {
-      User.findOrCreate({ githubId: profile.id }, function (err, user) {
-        return cb(err, user);
-      });
+    clientSecret: process.env.GITHUB_CLIENT_SECRET
+    },
+    (accessToken, refreshToken, profile, done) => {
+      done(null, {
+        accessToken: accessToken,
+        profile: profile
+      })
     }
-  ));
+  ))
+
+
+
 }
