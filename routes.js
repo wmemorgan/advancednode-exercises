@@ -22,6 +22,20 @@ module.exports = function (app, db) {
         res.redirect('/profile')
       })
 
+  app.route('/auth/github/')
+    .post(passport.authenticate('github', { failureRedirect: '/' }),
+      (req, res) => {
+        console.log('The login req.body contents are: ', req.body)
+        res.redirect('/profile')
+      })
+
+  app.route('/auth/github/callback')
+    .post(passport.authenticate('github', { failureRedirect: '/' }),
+      (req, res) => {
+        console.log('The login req.body contents are: ', req.body)
+        res.redirect('/profile')
+      })
+
   // middleware to ensure user is authenticated before displaying profile page
   const ensureAuthenticated = (req, res, next) => {
     // isAuthenticated() via passport
