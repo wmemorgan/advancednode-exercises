@@ -1,6 +1,7 @@
 const passport = require('passport')
 const ObjectID = require('mongodb').ObjectID
-const LocalStrategy = require('passport-local')
+const LocalStrategy = require('passport-local').Strategy
+const GitHubStrategy = require('passport-github').Strategy
 const bcrypt = require('bcrypt')
 
 module.exports = function (app, db) {  
@@ -18,7 +19,7 @@ module.exports = function (app, db) {
     })
   })
 
-  // password authentication
+  // local password authentication
   passport.use(new LocalStrategy(
     (username, password, done) => {
       db.collection('users').findOne({ username: username }, (err, user) => {
@@ -42,4 +43,17 @@ module.exports = function (app, db) {
       })
     })
   )
+
+  // GitHub authentication
+  passport.use(new GitHubStrategy({
+    clientID: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    callbackURL: "https://wme-advancednode.glitch.me/auth/github/callback"
+  },
+    function (accessToken, refreshToken, profile, cb) {
+      User.findOrCreate({ githubId: profile.id }, function (err, user) {
+        return cb(err, user);
+      });
+    }
+  ));
 }
