@@ -67,8 +67,8 @@ mongo.connect(process.env.DBCONNECT, { useNewUrlParser: true }, (err, conn) => {
 
   // password authentication
   passport.use(new LocalStrategy(
-    function (username, password, done) {
-      db.collection('users').findOne({ username: username }, function (err, user) {
+    (username, password, done) => {
+      db.collection('users').findOne({ username: username }, (err, user) => {
         console.log(`The database is: ${process.env.DBCONNECT}`)
         console.log(`The db is: `, db.databaseName)
         console.log(`User ${username} attempted to log in.`)
@@ -112,7 +112,7 @@ mongo.connect(process.env.DBCONNECT, { useNewUrlParser: true }, (err, conn) => {
       })
 
   // middleware to ensure user is authenticated before displaying profile page
-  function ensureAuthenticated(req, res, next) {
+  const ensureAuthenticated = (req, res, next) => {
     // isAuthenticated() via passport
     console.log('req contents are: ', req.isAuthenticated())
     if (req.isAuthenticated()) {
@@ -137,7 +137,7 @@ mongo.connect(process.env.DBCONNECT, { useNewUrlParser: true }, (err, conn) => {
 
   app.route('/register')
     .post((req, res, next) => {
-      db.collection('users').findOne({ username: req.body.username }, function (err, user) {
+      db.collection('users').findOne({ username: req.body.username }, (err, user) => {
         if (err) {
           next(err);
         } else if (user) {
