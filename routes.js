@@ -22,15 +22,23 @@ module.exports = function (app, db) {
   //       console.log('The login req.body contents are: ', req.body)
   //       res.redirect('/profile')
   //     })
+  
+  //GitHubStrategy login    
+  app.route('/login')
+    .post(passport.authenticate('github', { failureRedirect: '/' }),
+      (req, res) => {
+        // console.log('The login req.body contents are: ', req.body)
+        res.redirect('/profile')
+      })
 
   // GitHub user authentication    
-  app.route('/auth/github/')
+  app.route('/auth/github')
     .get(passport.authenticate('github'))
 
   app.route('/auth/github/callback')
     .get(passport.authenticate('github', { failureRedirect: '/' }),
       (req, res) => {
-        console.log('The login req.body contents are: ', req.body)
+        // console.log('The login req.body contents are: ', req.body)
         res.redirect('/profile')
       })
 
@@ -56,8 +64,8 @@ module.exports = function (app, db) {
 
   app.route('/profile')
     .get(ensureAuthenticated, (req, res) => {
-      console.log('username is: ', req.user)
-      res.render(process.cwd() + '/views/pug/profile', { username: req.user.profile.displayName })
+      console.log('/profile route data is: ', req.user)
+      res.render(process.cwd() + '/views/pug/profile', { username: req.user.name })
     })
 
   app.route('/logout')
