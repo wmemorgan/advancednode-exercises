@@ -49,14 +49,17 @@ mongo.connect(dbURI, { useNewUrlParser: true }, (err, conn) => {
 
   //serialization for GitHubStrategy
   passport.serializeUser((user, done) => {
-    console.log('serialize user: ', user)
-    done(null, user)
-  })
+    done(null, user.id);
+  });
 
-  passport.deserializeUser((user, done) => {
-    console.log('deserialize user: ', user)
-    done(null, user)
-  })
+  passport.deserializeUser((id, done) => {
+    db.collection('socialusers').findOne(
+      { id: id },
+      (err, doc) => {
+        done(null, doc);
+      }
+    );
+  });
 
   // middleware to ensure user is authenticated before displaying profile page
   const ensureAuthenticated = (req, res, next) => {
@@ -76,15 +79,39 @@ mongo.connect(dbURI, { useNewUrlParser: true }, (err, conn) => {
     clientSecret: process.env.GITHUB_CLIENT_SECRET
   },
     (accessToken, refreshToken, profile, done) => {
-      done(null, {
-        accessToken: accessToken,
-        profile: profile
-      })
+      console.log(profile)
+      console.log('The profile name: ', profile.displayName)
+      db.collection('socialusers').findAndModify(
+        { id: profile.id },
+        {},
+        {
+          $setOnInsert: {
+            id: profile.id,
+            name: profile.displayName ? profile.displayName : 'John Doe',
+            photo: profile.photos ? profile.photos[0].value : '',
+            email: profile.emails ? profile.emails[0].value : 'No public email',
+            created_on: new Date(),
+            provider: profile.provider ? profile.provider : ''
+          }, $set: {
+            last_login: new Date()
+          }, $inc: {
+            login_count: 1
+          }
+        },
+        { upsert: true, new: true },
+        (err, doc) => {
+          return done(null, doc.value);
+        }
+      );
+      // done(null, {
+      //   accessToken: accessToken,
+      //   profile: profile
+      // })
     }
   ))
 
   // GitHub user authentication    
-  app.route('/auth/github/')
+  app.route('/auth/github')
     .get(passport.authenticate('github'))
 
   app.route('/auth/github/callback')
@@ -117,7 +144,7 @@ mongo.connect(dbURI, { useNewUrlParser: true }, (err, conn) => {
   app.route('/profile')
     .get(ensureAuthenticated, (req, res) => {
       console.log('username is: ', req.user)
-      res.render(process.cwd() + '/views/pug/profile', { username: req.user.profile.displayName })
+      res.render(process.cwd() + '/views/pug/profile', { username: req.user.name })
     })
 
   app.route('/logout')
