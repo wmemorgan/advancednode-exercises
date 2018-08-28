@@ -22,14 +22,6 @@ module.exports = function (app, db) {
   //       console.log('The login req.body contents are: ', req.body)
   //       res.redirect('/profile')
   //     })
-  
-  //GitHubStrategy login    
-  app.route('/login')
-    .post(passport.authenticate('github', { failureRedirect: '/' }),
-      (req, res) => {
-        console.log('The login req.body contents are: ', req.body)
-        res.redirect('/profile')
-      })
 
   // GitHub user authentication    
   app.route('/auth/github/')
@@ -37,6 +29,14 @@ module.exports = function (app, db) {
 
   app.route('/auth/github/callback')
     .get(passport.authenticate('github', { failureRedirect: '/' }),
+      (req, res) => {
+        console.log('The login req.body contents are: ', req.body)
+        res.redirect('/profile')
+      })
+
+  //GitHubStrategy login    
+  app.route('/login')
+    .post(passport.authenticate('github', { failureRedirect: '/' }),
       (req, res) => {
         console.log('The login req.body contents are: ', req.body)
         res.redirect('/profile')
