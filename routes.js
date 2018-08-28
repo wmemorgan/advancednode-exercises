@@ -22,15 +22,12 @@ module.exports = function (app, db) {
         res.redirect('/profile')
       })
 
+  // GitHub user authentication    
   app.route('/auth/github/')
-    .post(passport.authenticate('github', { failureRedirect: '/' }),
-      (req, res) => {
-        console.log('The login req.body contents are: ', req.body)
-        res.redirect('/profile')
-      })
+    .get(passport.authenticate('github'))
 
   app.route('/auth/github/callback')
-    .post(passport.authenticate('github', { failureRedirect: '/' }),
+    .get(passport.authenticate('github', { failureRedirect: '/' }),
       (req, res) => {
         console.log('The login req.body contents are: ', req.body)
         res.redirect('/profile')
