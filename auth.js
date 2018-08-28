@@ -1,7 +1,7 @@
 const passport = require('passport')
 const ObjectID = require('mongodb').ObjectID
-const bcrypt = require('bcrypt')
 const LocalStrategy = require('passport-local')
+const bcrypt = require('bcrypt')
 
 module.exports = function (app, db) {  
   //serialization

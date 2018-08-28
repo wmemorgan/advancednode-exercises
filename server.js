@@ -12,11 +12,7 @@ const passport = require('passport')
 const bcrypt = require('bcrypt')
 const mongo = require('mongodb').MongoClient
 
-//passport-local for LocalStrategy objects for Local auth,
-//mongodb for unique ObjectID objects
-const LocalStrategy = require('passport-local')
-const ObjectID = require('mongodb').ObjectID
-
+// user authentication module
 const auth = require('./auth.js')
 // const routes = require('./routes.js')
 const dbURI = process.env.DBCONNECT
