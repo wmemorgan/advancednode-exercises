@@ -5,12 +5,12 @@ const LocalStrategy = require('passport-local')
 
 module.exports = function (app, db) {  
   //serialization
-  //set up functions for serialization (user -> key) and deserialization (key -> user )
+  //set up function for serialization (user -> key)
   passport.serializeUser((user, done) => {
     console.log('serialize user: ', user)
     done(null, user._id);
   })
-
+  //set up function for deserialization (key -> user)
   passport.deserializeUser((id, done) => {
     console.log('deserialize id: ', id)
     db.collection('users').findOne({ _id: new ObjectID(id) }, (err, doc) => {
@@ -22,8 +22,7 @@ module.exports = function (app, db) {
   passport.use(new LocalStrategy(
     (username, password, done) => {
       db.collection('users').findOne({ username: username }, (err, user) => {
-        console.log(`The database is: ${process.env.DBCONNECT}`)
-        console.log(`The db is: `, db.databaseName)
+        console.log(`The database name is: `, db.databaseName)
         console.log(`User ${username} attempted to log in.`)
         if (err) { return done(err) }
         if (!user) {
@@ -43,7 +42,4 @@ module.exports = function (app, db) {
       })
     })
   )
-
-
-
 }

@@ -19,7 +19,7 @@ const ObjectID = require('mongodb').ObjectID
 
 const auth = require('./auth.js')
 // const routes = require('./routes.js')
-// const dbURI = process.env.DBCONNECT
+const dbURI = process.env.DBCONNECT
 
 const app = express()
 
@@ -42,7 +42,7 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 // connect to MongoDB (via mLab) only ONCE, start server once connection established
-mongo.connect(process.env.DBCONNECT, { useNewUrlParser: true }, (err, conn) => {
+mongo.connect(dbURI, { useNewUrlParser: true }, (err, conn) => {
   const db = conn.db("wme-practicedb")
   if (err) {
     console.log(`Database error: ${err}`)
