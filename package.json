@@ -4,7 +4,7 @@
   "//3": "updating this file will download and update your packages",
   "name": "FCC-Advanced-Node-and-Express",
   "author": "http://github.com/JosephLivengood",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "What am I about?",
   "main": "server.js",
   "scripts": {
