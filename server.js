@@ -76,7 +76,8 @@ mongo.connect(dbURI, { useNewUrlParser: true }, (err, conn) => {
   // GitHub authentication
   passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET
+    clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    callbackURL: 'https://wme-advancednode.glitch.me/auth/github/callback'
   },
     (accessToken, refreshToken, profile, cb) => {
       console.log(profile)
