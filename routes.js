@@ -15,8 +15,17 @@ module.exports = function (app, db) {
       )
     })
 
+  // //LocalStrategy login  
+  // app.route('/login')
+  //   .post(passport.authenticate('local', { failureRedirect: '/' }),
+  //     (req, res) => {
+  //       console.log('The login req.body contents are: ', req.body)
+  //       res.redirect('/profile')
+  //     })
+  
+  //GitHubStrategy login    
   app.route('/login')
-    .post(passport.authenticate('local', { failureRedirect: '/' }),
+    .post(passport.authenticate('github', { failureRedirect: '/' }),
       (req, res) => {
         console.log('The login req.body contents are: ', req.body)
         res.redirect('/profile')
