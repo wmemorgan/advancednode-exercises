@@ -32,7 +32,7 @@ module.exports = function (app, db) {
       })
 
   // GitHub user authentication    
-  app.route('/auth/github/')
+  app.route('/auth/github')
     .get(passport.authenticate('github'))
 
   app.route('/auth/github/callback')
