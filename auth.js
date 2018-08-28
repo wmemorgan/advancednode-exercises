@@ -1,6 +1,7 @@
 const passport = require('passport')
 const ObjectID = require('mongodb').ObjectID
 const LocalStrategy = require('passport-local')
+const GitHubStrategy = require('passport-github')
 const bcrypt = require('bcrypt')
 
 module.exports = function (app, db) {  
@@ -42,4 +43,20 @@ module.exports = function (app, db) {
       })
     })
   )
+
+  // GitHub authentication
+  passport.use(new GitHubStrategy({
+    clientID: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET
+    },
+    (accessToken, refreshToken, profile, done) => {
+      done(null, {
+        accessToken: accessToken,
+        profile: profile
+      })
+    }
+  ))
+
+
+
 }
