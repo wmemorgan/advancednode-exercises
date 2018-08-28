@@ -4,32 +4,45 @@ require('dotenv').load();
 const express     = require('express');
 const bodyParser  = require('body-parser');
 const fccTesting  = require('./freeCodeCamp/fcctesting.js');
-const pug = require('pug')
-const mongo = require('mongodb').MongoClient
-const passport = require('passport')
+
+// user session to store cookies for session, 
+//passport for authentication, mongodb for user database
 const session = require('express-session')
+const passport = require('passport')
+const bcrypt = require('bcrypt')
+const mongo = require('mongodb').MongoClient
 
-const auth = require('./auth.js')
-const routes = require('./routes.js')
+//passport-local for LocalStrategy objects for Local auth,
+//mongodb for unique ObjectID objects
+const LocalStrategy = require('passport-local')
+const ObjectID = require('mongodb').ObjectID
 
-const dbURI = process.env.DBCONNECT
-const app = express();
+// const auth = require('./auth.js')
+// const routes = require('./routes.js')
+// const dbURI = process.env.DBCONNECT
+
+const app = express()
+
+app.set('view engine', 'pug')
 
 fccTesting(app); //For FCC testing purposes
 app.use('/public', express.static(process.cwd() + '/public'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.set('view engine', 'pug')
 
+//set up express session with salt from .env
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: true,
   saveUninitialized: true,
 }))
+
+//set up server to use passport
 app.use(passport.initialize())
 app.use(passport.session())
 
-mongo.connect(dbURI, { useNewUrlParser: true }, (err, conn) => {
+// connect to MongoDB (via mLab) only ONCE, start server once connection established
+mongo.connect(process.env.DBCONNECT, { useNewUrlParser: true }, (err, conn) => {
   const db = conn.db("wme-practicedb")
   if (err) {
     console.log(`Database error: ${err}`)
@@ -37,9 +50,121 @@ mongo.connect(dbURI, { useNewUrlParser: true }, (err, conn) => {
     console.log('Successful database connection')
   }
 
-  auth(app, db)
+  //serialization
+  //set up functions for serialization (user -> key) 
+  //and deserialization (key -> user )
+  passport.serializeUser((user, done) => {
+    console.log('serialize user: ', user)
+    done(null, user._id);
+  })
 
-  routes(app, db)
+  passport.deserializeUser((id, done) => {
+    console.log('deserialize id: ', id)
+    db.collection('users').findOne({ _id: new ObjectID(id) }, (err, doc) => {
+        done(null, doc);
+      })
+  })
+
+  // password authentication
+  passport.use(new LocalStrategy(
+    function (username, password, done) {
+      db.collection('users').findOne({ username: username }, function (err, user) {
+        console.log(`The database is: ${process.env.DBCONNECT}`)
+        console.log(`The db is: `, db.databaseName)
+        console.log(`User ${username} attempted to log in.`)
+        if (err) { return done(err) }
+        if (!user) {
+          console.log(`User does not exist`)
+          return done(null, false)
+        }
+        if (!bcrypt.compareSync(password, user.password)) {
+          console.log(`Invalid password`)
+          return done(null, false);
+        }
+        // if (password !== user.password) {
+        //   console.log(`Invalid password`)
+        //   return done(null, false)
+        // }
+        console.log('Returning user: ', user)
+        return done(null, user)
+      })
+    })
+  )
+
+  // API routes
+  app.route('/')
+    .get((req, res) => {
+      res.render(process.cwd() + '/views/pug/index',
+        {
+          title: 'Home page',
+          message: 'Please login',
+          showLogin: true,
+          showRegistration: true,
+        }
+      )
+    })
+
+  app.route('/login')
+    .post(passport.authenticate('local', { failureRedirect: '/' }),
+      (req, res) => {
+        console.log('The login req.body contents are: ', req.body)
+        res.redirect('/profile')
+      })
+
+  // middleware to ensure user is authenticated before displaying profile page
+  function ensureAuthenticated(req, res, next) {
+    // isAuthenticated() via passport
+    console.log('req contents are: ', req.isAuthenticated())
+    if (req.isAuthenticated()) {
+      console.log('Is authenticated')
+      return next();
+    }
+    console.log('Is not authenticated')
+    res.redirect('/');
+  }
+  
+  app.route('/profile')
+    .get(ensureAuthenticated, (req, res) => {
+      console.log('username is: ', req.user)
+      res.render(process.cwd() + '/views/pug/profile', { username: req.user.username })
+    })
+
+  app.route('/logout')
+    .get((req, res) => {
+      req.logout()
+      res.redirect('/')
+    })
+
+  app.route('/register')
+    .post((req, res, next) => {
+      db.collection('users').findOne({ username: req.body.username }, function (err, user) {
+        if (err) {
+          next(err);
+        } else if (user) {
+          console.log('User already exists')
+          res.redirect('/');
+        } else {
+          var hash = bcrypt.hashSync(req.body.password, 12)
+          db.collection('users').insertOne(
+            {username: req.body.username,
+              // password: req.body.password},
+              password: hash},
+            (err, doc) => {
+              if (err) {
+                res.redirect('/');
+              } else {
+                next(null, user);
+              }
+            }
+          )
+          console.log(`${req.body.username} created`)
+        }
+      })
+    },
+    passport.authenticate('local', { failureRedirect: '/' }),
+      (req, res, next) => {
+        res.redirect('/profile');
+    })
   
   app.use((req, res, next) => {
     res.status(404)

@@ -61,7 +61,7 @@ module.exports = function (app, db) {
           db.collection('users').insertOne(
             {
               username: req.body.username,
-              password: hash
+              password: req.body.password
             },
             (err, doc) => {
               if (err) {
@@ -84,6 +84,6 @@ module.exports = function (app, db) {
     .get((req, res) => {
       req.logout();
       res.redirect('/');
-    });
+    })
 
 }
