@@ -5,18 +5,29 @@ const GitHubStrategy = require('passport-github')
 const bcrypt = require('bcrypt')
 
 module.exports = function (app, db) {  
-  //serialization
-  //set up function for serialization (user -> key)
+  // //serialization for LocalStrategy
+  // //set up function for serialization (user -> key)
+  // passport.serializeUser((user, done) => {
+  //   console.log('serialize user: ', user)
+  //   done(null, user._id);
+  // })
+  // //set up function for deserialization (key -> user)
+  // passport.deserializeUser((id, done) => {
+  //   console.log('deserialize id: ', id)
+  //   db.collection('users').findOne({ _id: new ObjectID(id) }, (err, doc) => {
+  //     done(null, doc);
+  //   })
+  // })
+
+  //serialization for GitHubStrategy
   passport.serializeUser((user, done) => {
     console.log('serialize user: ', user)
-    done(null, user._id);
+    done(null, user)
   })
-  //set up function for deserialization (key -> user)
-  passport.deserializeUser((id, done) => {
-    console.log('deserialize id: ', id)
-    db.collection('users').findOne({ _id: new ObjectID(id) }, (err, doc) => {
-      done(null, doc);
-    })
+
+  passport.deserializeUser((user, done) => {
+    console.log('deserialize user: ', user)
+    done(null, user)
   })
 
   // password authentication

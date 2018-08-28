@@ -48,7 +48,7 @@ module.exports = function (app, db) {
   app.route('/profile')
     .get(ensureAuthenticated, (req, res) => {
       console.log('username is: ', req.user)
-      res.render(process.cwd() + '/views/pug/profile', { username: req.user.username })
+      res.render(process.cwd() + '/views/pug/profile', { username: req.user.profile.displayName })
     })
 
   app.route('/logout')
