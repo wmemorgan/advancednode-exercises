@@ -78,7 +78,7 @@ mongo.connect(dbURI, { useNewUrlParser: true }, (err, conn) => {
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET
   },
-    (accessToken, refreshToken, profile, done) => {
+    (accessToken, refreshToken, profile, cb) => {
       console.log(profile)
       console.log('The profile name: ', profile.displayName)
       db.collection('socialusers').findAndModify(
@@ -100,7 +100,7 @@ mongo.connect(dbURI, { useNewUrlParser: true }, (err, conn) => {
         },
         { upsert: true, new: true },
         (err, doc) => {
-          return done(null, doc.value);
+          return cb(null, doc.value);
         }
       );
       // done(null, {
