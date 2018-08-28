@@ -73,7 +73,7 @@ module.exports = function (app, db) {
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET
     },
-    function(accessToken, refreshToken, profile, done) {
+    (accessToken, refreshToken, profile, done) => {
       console.log(profile)
       console.log('The profile name: ', profile.displayName)
       db.collection('socialusers').findAndModify(
