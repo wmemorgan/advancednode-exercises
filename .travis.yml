@@ -6,6 +6,7 @@ branches:
   only:
     - gomix
     - master
+    - /^greenkeeper/.*$/
 
 # before_install:
 #   - npm install -g npm@5
